@@ -37,6 +37,7 @@ def RequestsForm(page: ft.Page, db: Database, user_id: int, on_back):
     file_picker = ft.FilePicker()
     file_picker.on_result = lambda e: update_file_label(e)
     page.overlay.append(file_picker)
+    file_label = ft.Text("ファイル未選択")
 
     def update_file_label(e: ft.FilePickerResultEvent):
         # ... logic ...
@@ -46,7 +47,62 @@ def RequestsForm(page: ft.Page, db: Database, user_id: int, on_back):
             file_label.value = "ファイル未選択"
         page.update()
 
-    # ... (Rest of the logic set_reason_text, update_form_visibility, submit_request) ...
+    # Containers for conditional visibility (Defined early for use in update_form_visibility)
+    amount_container = ft.Container(content=amount_field, visible=False)
+    file_upload_container = ft.Container(
+        content=ft.Row([
+            ft.ElevatedButton(
+                content=ft.Text("領収書/写真添付"),
+                icon=ft.Icons.CAMERA_ALT,
+                on_click=lambda _: file_picker.pick_files()
+            ),
+            file_label
+        ]),
+        visible=False
+    )
+
+    def set_reason_text(value):
+        if value:
+            content_field.value = value
+            page.update()
+
+    def update_form_visibility():
+        cat = category_dropdown.value
+        # Show amount only for Expenses/Materials
+        if cat in ["経費", "部材"]:
+            amount_container.visible = True
+            file_upload_container.visible = True
+        else:
+            amount_container.visible = False
+            file_upload_container.visible = False
+        page.update()
+
+    def submit_request(e):
+        cat = category_dropdown.value
+        content = content_field.value
+        
+        amount = 0.0
+        if amount_container.visible:
+            try:
+                amount = float(amount_field.value)
+            except ValueError:
+                page.snack_bar = ft.SnackBar(ft.Text("金額は数値で入力してください"), bgcolor="red")
+                page.snack_bar.open = True
+                page.update()
+                return
+
+        success = db.add_request(user_id, cat, content, amount)
+        if success:
+            page.snack_bar = ft.SnackBar(ft.Text("申請が完了しました"), bgcolor="green")
+            page.snack_bar.open = True
+            on_back(None) # Go back to home
+        else:
+            page.snack_bar = ft.SnackBar(ft.Text("申請に失敗しました"), bgcolor="red")
+            page.snack_bar.open = True
+            page.update()
+
+    # Initial visibility check
+    update_form_visibility()
 
     # We return a Container acting as the "Screen"
     return ft.Container(

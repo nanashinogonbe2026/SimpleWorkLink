@@ -109,13 +109,48 @@ def AdminDashboard(page: ft.Page, db: Database, on_back):
     # ... (Previous logic for data table, dialogs, etc.) ...
     
     # FilePicker for CSV
+    # FilePicker for CSV
     csv_picker = ft.FilePicker()
     csv_picker.on_result = lambda e: save_csv(e)
     page.overlay.append(csv_picker)
 
     def save_csv(e: ft.FilePickerResultEvent):
-        # ... (CSV logic) ...
-        pass # Logic handled below
+        if e.path:
+            try:
+                stats = db.get_monthly_stats()
+                import csv
+                with open(e.path, 'w', newline='', encoding='utf-8') as f:
+                    writer = csv.writer(f)
+                    writer.writerow(["ID", "Name", "Total Hours", "Overtime", "Expenses"])
+                    for s in stats:
+                        writer.writerow([s['id'], s['name'], s['total_hours'], s['overtime'], s['expenses']])
+                
+                page.snack_bar = ft.SnackBar(ft.Text(f"CSVを出力しました: {e.path}"), bgcolor="green")
+                page.snack_bar.open = True
+                page.update()
+            except Exception as ex:
+                page.snack_bar = ft.SnackBar(ft.Text(f"エラー: {ex}"), bgcolor="red")
+                page.snack_bar.open = True
+                page.update()
+
+    def get_risk_alert():
+        stats = db.get_monthly_stats()
+        risky_users = [s for s in stats if s['overtime'] > 40]
+        if not risky_users:
+            return ft.Container()
+        
+        items = []
+        for u in risky_users:
+            items.append(ft.Text(f"⚠️ {u['name']} (残業: {u['overtime']}h)", color=ft.Colors.RED, weight=ft.FontWeight.BOLD))
+        
+        return ft.Container(
+            content=ft.Column([ft.Text("【リスク管理アラート】残業40h超過者", weight=ft.FontWeight.BOLD), *items]),
+            bgcolor=ft.Colors.RED_50,
+            padding=10,
+            border=ft.border.all(1, ft.Colors.RED),
+            border_radius=5,
+            margin=ft.margin.only(bottom=10)
+        )
 
     # Check for risk alerts
     alert_container = get_risk_alert()
