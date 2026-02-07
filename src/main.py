@@ -123,8 +123,9 @@ def main(page: ft.Page):
     page.on_route_change = route_change
     page.on_view_pop = view_pop
     
-    # Initialize the view by manually triggering route change
-    route_change(ft.RouteChangeEvent(page.route))
+    # Initialize the view by manually triggering route change using 'page' 
+    # (duck typing: page has a .route property just like the event)
+    route_change(page)
 
 if __name__ == "__main__":
     ft.app(target=main)
