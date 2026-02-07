@@ -129,14 +129,16 @@ def HomeView(page: ft.Page, db: Database, user_id: int, user_name: str, on_navig
     return ft.Container(
         content=ft.Column(
             [
-                ft.Row(
-                    [
-                        ft.Text("現場ホーム", size=20, weight="bold", color="white"),
-                        ft.IconButton(ft.Icons.LOGOUT, on_click=lambda _: on_logout(), icon_color="white")
-                    ],
-                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                ft.Container(
+                    content=ft.Row(
+                        [
+                            ft.Text("現場ホーム", size=20, weight="bold", color="white"),
+                            ft.IconButton(ft.Icons.LOGOUT, on_click=lambda _: on_logout(), icon_color="white")
+                        ],
+                        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                        vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    ),
                     bgcolor=ft.Colors.BLUE_700,
-                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
                     height=60,
                     padding=ft.padding.only(left=20, right=10)
                 ),
