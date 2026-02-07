@@ -34,7 +34,8 @@ def RequestsForm(page: ft.Page, db: Database, user_id: int, on_back):
     # --- FilePicker Logic ---
     # We need to ensure the file picker is added to the page overlay when this view is active.
     # Since we are using manual routing with page.clean(), we must add it each time.
-    file_picker = ft.FilePicker(on_result=lambda e: update_file_label(e))
+    file_picker = ft.FilePicker()
+    file_picker.on_result = lambda e: update_file_label(e)
     page.overlay.append(file_picker)
 
     def update_file_label(e: ft.FilePickerResultEvent):

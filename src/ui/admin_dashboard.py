@@ -109,7 +109,8 @@ def AdminDashboard(page: ft.Page, db: Database, on_back):
     # ... (Previous logic for data table, dialogs, etc.) ...
     
     # FilePicker for CSV
-    csv_picker = ft.FilePicker(on_result=lambda e: save_csv(e))
+    csv_picker = ft.FilePicker()
+    csv_picker.on_result = lambda e: save_csv(e)
     page.overlay.append(csv_picker)
 
     def save_csv(e: ft.FilePickerResultEvent):
