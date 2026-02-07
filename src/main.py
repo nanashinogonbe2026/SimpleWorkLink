@@ -98,6 +98,8 @@ def main(page: ft.Page):
             
         except Exception as e:
             print(f"CRITICAL RENDERING ERROR: {e}")
+            with open("error.txt", "w", encoding="utf-8") as f:
+                f.write(str(e))
             page.add(ft.Text(f"Error rendering {route}: {e}", color="red", size=20))
             page.update()
 

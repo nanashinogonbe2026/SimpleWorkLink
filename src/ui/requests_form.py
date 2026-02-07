@@ -111,7 +111,7 @@ def RequestsForm(page: ft.Page, db: Database, user_id: int, on_back):
                 ft.Row(
                     [
                         ft.IconButton(ft.Icons.ARROW_BACK, on_click=on_back),
-                        ft.Text("各種申請", size=25, weight=ft.FontWeight.BOLD),
+                        ft.Text("各種申請", size=25, weight="bold"),
                     ],
                     alignment=ft.MainAxisAlignment.START,
                     vertical_alignment=ft.CrossAxisAlignment.CENTER
@@ -135,8 +135,8 @@ def RequestsForm(page: ft.Page, db: Database, user_id: int, on_back):
                             icon=ft.Icons.SEND,
                             width=300,
                             height=60,
-                            bgcolor=ft.Colors.BLUE_700,
-                            color=ft.Colors.WHITE,
+                            bgcolor="blue700",
+                            color="white",
                             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
                             on_click=submit_request
                         )

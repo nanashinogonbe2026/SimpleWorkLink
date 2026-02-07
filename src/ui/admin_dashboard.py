@@ -161,7 +161,7 @@ def AdminDashboard(page: ft.Page, db: Database, on_back):
                 ft.Row(
                     [
                         ft.IconButton(ft.Icons.ARROW_BACK, on_click=on_back),
-                        ft.Text("管理ダッシュボード", size=25, weight=ft.FontWeight.BOLD),
+                        ft.Text("管理ダッシュボード", size=25, weight="bold"),
                         ft.Container(expand=True),
                         ft.ElevatedButton(
                             content=ft.Text("CSV出力"), 
@@ -177,7 +177,7 @@ def AdminDashboard(page: ft.Page, db: Database, on_back):
                 ft.Container(
                     content=ft.Column(
                         [
-                            ft.Text("打刻一覧 (9:15以降は赤字)", size=16, color=ft.Colors.GREY),
+                            ft.Text("打刻一覧 (9:15以降は赤字)", size=16, color="grey"),
                             data_table
                         ],
                         scroll=ft.ScrollMode.AUTO
