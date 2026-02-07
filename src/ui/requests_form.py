@@ -1,0 +1,142 @@
+import flet as ft
+from database import Database
+
+def RequestsForm(page: ft.Page, db: Database, user_id: int, on_back):
+    
+    # State for dynamic form fields
+    category_dropdown = ft.Dropdown(
+        label="申請種別",
+        options=[
+            ft.dropdown.Option("有給"),
+            ft.dropdown.Option("休日"),
+            ft.dropdown.Option("経費"),
+            ft.dropdown.Option("部材"),
+        ],
+        value="有給",
+        on_change=lambda e: update_form_visibility()
+    )
+
+    reason_shortcuts = ft.Dropdown(
+        label="定型理由（選択で入力）",
+        options=[
+            ft.dropdown.Option("私用のため"),
+            ft.dropdown.Option("病院への通院"),
+            ft.dropdown.Option("交通機関の遅延"),
+            ft.dropdown.Option("現場消耗品購入"),
+            ft.dropdown.Option("コインパーキング代"),
+        ],
+        on_change=lambda e: set_reason_text(e.control.value)
+    )
+
+    content_field = ft.TextField(label="内容/理由", multiline=True, min_lines=2)
+    amount_field = ft.TextField(label="金額/個数", value="0", keyboard_type=ft.KeyboardType.NUMBER)
+    
+    file_picker = ft.FilePicker(on_result=lambda e: update_file_label(e))
+    page.overlay.append(file_picker)
+    file_label = ft.Text("ファイル未選択")
+
+    def update_file_label(e: ft.FilePickerResultEvent):
+        if e.files:
+            file_label.value = f"選択済: {e.files[0].name}"
+        else:
+            file_label.value = "ファイル未選択"
+        page.update()
+
+    def set_reason_text(value):
+        if value:
+            content_field.value = value
+            page.update()
+
+    def update_form_visibility():
+        cat = category_dropdown.value
+        # Show amount only for Expenses/Materials
+        if cat in ["経費", "部材"]:
+            amount_container.visible = True
+            file_upload_container.visible = True
+        else:
+            amount_container.visible = False
+            file_upload_container.visible = False
+        page.update()
+
+    def submit_request(e):
+        cat = category_dropdown.value
+        content = content_field.value
+        
+        amount = 0.0
+        if amount_container.visible:
+            try:
+                amount = float(amount_field.value)
+            except ValueError:
+                page.snack_bar = ft.SnackBar(ft.Text("金額は数値で入力してください"), bgcolor="red")
+                page.snack_bar.open = True
+                page.update()
+                return
+
+        success = db.add_request(user_id, cat, content, amount)
+        if success:
+            page.snack_bar = ft.SnackBar(ft.Text("申請が完了しました"), bgcolor="green")
+            page.snack_bar.open = True
+            on_back(None) # Go back to home
+        else:
+            page.snack_bar = ft.SnackBar(ft.Text("申請に失敗しました"), bgcolor="red")
+            page.snack_bar.open = True
+            page.update()
+
+    # Containers for conditional visibility
+    amount_container = ft.Container(content=amount_field, visible=False)
+    file_upload_container = ft.Container(
+        content=ft.Row([
+            ft.ElevatedButton(
+                content=ft.Text("領収書/写真添付"),
+                icon=ft.Icons.CAMERA_ALT,
+                on_click=lambda _: file_picker.pick_files()
+            ),
+            file_label
+        ]),
+        visible=False
+    )
+
+    # Initial visibility check
+    update_form_visibility()
+
+    return ft.Column(
+        [
+            ft.Row(
+                [
+                    ft.IconButton(ft.Icons.ARROW_BACK, on_click=on_back),
+                    ft.Text("各種申請", size=25, weight=ft.FontWeight.BOLD),
+                ],
+                alignment=ft.MainAxisAlignment.START,
+                vertical_alignment=ft.CrossAxisAlignment.CENTER
+            ),
+            ft.Divider(),
+            ft.Container(height=20),
+            ft.Column(
+                [
+                    category_dropdown,
+                    ft.Container(height=10),
+                    reason_shortcuts,
+                    ft.Container(height=10),
+                    content_field,
+                    ft.Container(height=10),
+                    amount_container,
+                    ft.Container(height=10),
+                    file_upload_container,
+                    ft.Container(height=30),
+                    ft.ElevatedButton(
+                        content=ft.Text("申請・送信"),
+                        icon=ft.Icons.SEND,
+                        width=300,
+                        height=60,
+                        bgcolor=ft.Colors.BLUE_700,
+                        color=ft.Colors.WHITE,
+                        style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
+                        on_click=submit_request
+                    )
+                ],
+                scroll=ft.ScrollMode.AUTO,
+                expand=True
+            )
+        ],
+        expand=True
+    )
