@@ -158,17 +158,40 @@ def main(page: ft.Page):
         state.user_name = None
         page.go("/login")
 
-    page.on_route_change = route_change
-    page.on_view_pop = view_pop
+    # --- DEBUGGING: DISABLE ROUTING TEMPORARILY ---
+    # page.on_route_change = route_change
+    # page.on_view_pop = view_pop
     
     # Initialize by checking current route. 
     # If it is /, the handler will redirect to /login
-    print(f"DEBUG: Startup route check: {page.route}")
-    if page.route == "/" or page.route == "":
-        page.go("/login")
-    else:
-        # If started with a deep link (unlikely here but good practice), force check
-        route_change(page)
+    # print(f"DEBUG: Startup route check: {page.route}")
+    # if page.route == "/" or page.route == "":
+    #     page.go("/login")
+    # else:
+    #     # If started with a deep link (unlikely here but good practice), force check
+    #     route_change(page)
+
+    # --- DIRECT RENDERING TEST ---
+    print("DEBUG: Direct rendering test")
+    page.clean()
+    page.add(
+        ft.Text("SYSTEM CHECK: Direct Rendering", size=30, color="green", weight="bold"),
+        ft.Text("If you see this, Flet is working.", size=20),
+    )
+    
+    # Try adding LoginView controls directly (bypassing View wrapper)
+    try:
+        login_view_obj = LoginView(page, on_login)
+        # LoginView returns a View, so we take its controls
+        if hasattr(login_view_obj, 'controls'):
+            page.add(*login_view_obj.controls)
+        else:
+            page.add(ft.Text("LoginView did not return a View object?", color="red"))
+    except Exception as e:
+        page.add(ft.Text(f"Error loading LoginView: {e}", color="red"))
+        print(f"ERROR: {e}")
+
+    page.update()
 
 if __name__ == "__main__":
     ft.app(target=main)
