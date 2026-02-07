@@ -65,6 +65,7 @@ def main(page: ft.Page):
         # Home Route (Field Worker)
         elif current_route == "/home":
             print("DEBUG: Rendering Home View")
+            if not state.user_id:
                 print(f"DEBUG: No user ID, redirecting to /login")
                 page.go("/login")
                 return
