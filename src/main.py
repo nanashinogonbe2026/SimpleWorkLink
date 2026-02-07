@@ -27,18 +27,24 @@ def main(page: ft.Page):
 
     state = AppState()
 
+    print(f"DEBUG: Initial route is {page.route}")
+
     def route_change(route):
+        print(f"DEBUG: Route changed to {route.route}")
         page.views.clear()
         
         # Login Route
         if page.route == "/":
+            print("DEBUG: Rendering Login View")
             page.views.append(
                 LoginView(page, on_login)
             )
         
         # Home Route (Field Worker)
         elif page.route == "/home":
+            print("DEBUG: Rendering Home View")
             if not state.user_id:
+                print("DEBUG: No user ID, redirecting to /")
                 page.go("/")
                 return
             
@@ -55,6 +61,7 @@ def main(page: ft.Page):
 
         # Requests Route
         elif page.route == "/requests":
+            print("DEBUG: Rendering Requests View")
             if not state.user_id:
                 page.go("/")
                 return
@@ -77,6 +84,7 @@ def main(page: ft.Page):
 
         # Admin Route
         elif page.route == "/admin":
+            print("DEBUG: Rendering Admin View")
             if not state.user_id or state.user_role != "管理":
                 page.go("/")
                 return
@@ -95,14 +103,17 @@ def main(page: ft.Page):
                 )
             )
         
+        print(f"DEBUG: Updating page with {len(page.views)} views")
         page.update()
 
     def view_pop(view):
+        print("DEBUG: View pop")
         page.views.pop()
         top_view = page.views[-1]
         page.go(top_view.route)
 
     def on_login(user_id, role):
+        print(f"DEBUG: Login user={user_id}, role={role}")
         state.user_id = user_id
         state.user_role = role
         # Simple name lookup (In real app, fetch from DB)
@@ -114,6 +125,7 @@ def main(page: ft.Page):
             page.go("/admin")
 
     def logout():
+        print("DEBUG: Logout")
         state.user_id = None
         state.user_role = None
         state.user_name = None
@@ -122,7 +134,8 @@ def main(page: ft.Page):
     page.on_route_change = route_change
     page.on_view_pop = view_pop
     
-    page.go("/")
+    # Initialize the view by manually triggering route change
+    route_change(ft.RouteChange(page.route))
 
 if __name__ == "__main__":
     ft.app(target=main)
