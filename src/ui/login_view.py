@@ -64,7 +64,7 @@ def LoginView(page: ft.Page, on_login):
                     alignment=ft.MainAxisAlignment.CENTER,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
-                alignment=ft.alignment.center,
+                alignment=ft.Alignment(0, 0),
                 expand=True,
                 bgcolor=ft.Colors.BLUE_50
             )

@@ -152,7 +152,7 @@ def HomeView(page: ft.Page, db: Database, user_id: int, user_name: str, on_navig
                     alignment=ft.MainAxisAlignment.CENTER,
                     horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                 ),
-                alignment=ft.alignment.center,
+                alignment=ft.Alignment(0, 0),
                 expand=True
             )
         ]
