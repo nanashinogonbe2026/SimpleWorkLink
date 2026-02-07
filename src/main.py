@@ -38,8 +38,14 @@ def main(page: ft.Page):
         
         page.views.clear()
         
-        # Login Route (Handle empty route as root)
+        # Root Route -> Redirect to Login
         if current_route == "/" or current_route == "":
+            print("DEBUG: Root route detected, redirecting to /login")
+            page.go("/login")
+            return
+
+        # Login Route
+        if current_route == "/login":
             print("DEBUG: Rendering Login View")
             try:
                 page.views.append(
@@ -52,8 +58,8 @@ def main(page: ft.Page):
         elif current_route == "/home":
             print("DEBUG: Rendering Home View")
             if not state.user_id:
-                print("DEBUG: No user ID, redirecting to /")
-                page.go("/")
+                print("DEBUG: No user ID, redirecting to /login")
+                page.go("/login")
                 return
             
             try:
@@ -74,7 +80,7 @@ def main(page: ft.Page):
         elif current_route == "/requests":
             print("DEBUG: Rendering Requests View")
             if not state.user_id:
-                page.go("/")
+                page.go("/login")
                 return
 
             try:
@@ -98,7 +104,7 @@ def main(page: ft.Page):
         elif current_route == "/admin":
             print("DEBUG: Rendering Admin View")
             if not state.user_id or state.user_role != "管理":
-                page.go("/")
+                page.go("/login")
                 return
 
             try:
@@ -142,13 +148,19 @@ def main(page: ft.Page):
         state.user_id = None
         state.user_role = None
         state.user_name = None
-        page.go("/")
+        page.go("/login")
 
     page.on_route_change = route_change
     page.on_view_pop = view_pop
     
-    # Initialize the view
-    page.go("/")
+    # Initialize by checking current route. 
+    # If it is /, the handler will redirect to /login
+    print(f"DEBUG: Startup route check: {page.route}")
+    if page.route == "/" or page.route == "":
+        page.go("/login")
+    else:
+        # If started with a deep link (unlikely here but good practice), force check
+        route_change(page)
 
 if __name__ == "__main__":
     ft.app(target=main)

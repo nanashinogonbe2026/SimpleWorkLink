@@ -10,7 +10,7 @@ def LoginView(page: ft.Page, on_login):
         on_login(user_id, role)
 
     return ft.View(
-        "/",
+        "/login",
         [
             ft.Container(
                 content=ft.Column(
