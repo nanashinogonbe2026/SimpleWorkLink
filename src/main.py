@@ -35,6 +35,8 @@ def main(page: ft.Page):
     def navigate(route):
         print(f"DEBUG: Navigating to {route}")
         page.clean()
+        # Overlay controls must be cleared too as they are persistent
+        page.overlay.clear()
         
         # Reset standard page properties
         page.appbar = None
