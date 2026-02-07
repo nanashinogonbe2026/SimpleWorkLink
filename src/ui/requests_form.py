@@ -13,8 +13,8 @@ def RequestsForm(page: ft.Page, db: Database, user_id: int, on_back):
             ft.dropdown.Option("部材"),
         ],
         value="有給",
-        on_change=lambda e: update_form_visibility()
     )
+    category_dropdown.on_change = lambda e: update_form_visibility()
 
     reason_shortcuts = ft.Dropdown(
         label="定型理由（選択で入力）",
@@ -25,8 +25,8 @@ def RequestsForm(page: ft.Page, db: Database, user_id: int, on_back):
             ft.dropdown.Option("現場消耗品購入"),
             ft.dropdown.Option("コインパーキング代"),
         ],
-        on_change=lambda e: set_reason_text(e.control.value)
     )
+    reason_shortcuts.on_change = lambda e: set_reason_text(e.control.value)
 
     content_field = ft.TextField(label="内容/理由", multiline=True, min_lines=2)
     amount_field = ft.TextField(label="金額/個数", value="0", keyboard_type=ft.KeyboardType.NUMBER)
