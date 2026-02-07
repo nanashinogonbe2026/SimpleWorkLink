@@ -43,9 +43,9 @@ def main(page: ft.Page):
         try:
             # Login View
             if route == "/login":
-                view = LoginView(page, on_login)
-                # Extract controls from the returned ft.View
-                page.add(*view.controls)
+                # LoginView now returns a Container directly
+                login_container = LoginView(page, on_login)
+                page.add(login_container)
             
             # Home View
             elif route == "/home":
@@ -53,7 +53,8 @@ def main(page: ft.Page):
                     navigate("/login")
                     return
                 
-                view = HomeView(
+                # HomeView now returns a Container (with embedded custom App bar logic)
+                home_container = HomeView(
                     page, 
                     db, 
                     state.user_id, 
@@ -61,10 +62,7 @@ def main(page: ft.Page):
                     on_navigate_requests=lambda: navigate("/requests"),
                     on_logout=logout
                 )
-                # HomeView returns ft.View, need to set appbar manually if it has one
-                if hasattr(view, 'appbar') and view.appbar:
-                     page.appbar = view.appbar
-                page.add(*view.controls)
+                page.add(home_container)
 
             # Requests View
             elif route == "/requests":

@@ -126,34 +126,39 @@ def HomeView(page: ft.Page, db: Database, user_id: int, user_name: str, on_navig
 
     add_log(f"ようこそ、{user_name}さん。")
 
-    return ft.View(
-        "/home",
-        [
-            ft.AppBar(
-                title=ft.Text("現場ホーム"),
-                bgcolor=ft.Colors.BLUE_700,
-                color=ft.Colors.WHITE,
-                actions=[
-                    ft.IconButton(ft.Icons.LOGOUT, on_click=lambda _: on_logout())
-                ]
-            ),
-            ft.Container(
-                content=ft.Column(
+    return ft.Container(
+        content=ft.Column(
+            [
+                ft.Row(
                     [
-                        ft.Container(height=20),
-                        btn_clock_in,
-                        ft.Container(height=30),
-                        btn_clock_out,
-                        ft.Container(height=30),
-                        btn_requests,
-                        log_container,
-                        status_text
+                        ft.Text("現場ホーム", size=20, weight="bold", color="white"),
+                        ft.IconButton(ft.Icons.LOGOUT, on_click=lambda _: on_logout(), icon_color="white")
                     ],
-                    alignment=ft.MainAxisAlignment.CENTER,
-                    horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    bgcolor=ft.Colors.BLUE_700,
+                    vertical_alignment=ft.CrossAxisAlignment.CENTER,
+                    height=60,
+                    padding=ft.padding.only(left=20, right=10)
                 ),
-                alignment=ft.Alignment(0, 0),
-                expand=True
-            )
-        ]
+                ft.Container(
+                    content=ft.Column(
+                        [
+                            ft.Container(height=20),
+                            btn_clock_in,
+                            ft.Container(height=30),
+                            btn_clock_out,
+                            ft.Container(height=30),
+                            btn_requests,
+                            log_container,
+                            status_text
+                        ],
+                        alignment=ft.MainAxisAlignment.CENTER,
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+                    ),
+                    alignment=ft.Alignment(0, 0),
+                    expand=True
+                )
+            ]
+        ),
+        expand=True
     )
