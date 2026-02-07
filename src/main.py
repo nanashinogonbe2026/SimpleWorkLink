@@ -41,7 +41,7 @@ def main(page: ft.Page):
         # Root Route -> Redirect to Login
         if current_route == "/" or current_route == "":
             print("DEBUG: Root route detected, redirecting to /login")
-            page.push_route("/login")
+            page.go("/login")
             return
 
         # Login Route
@@ -65,9 +65,8 @@ def main(page: ft.Page):
         # Home Route (Field Worker)
         elif current_route == "/home":
             print("DEBUG: Rendering Home View")
-            if not state.user_id:
-                print("DEBUG: No user ID, redirecting to /login")
-                page.push_route("/login")
+                print(f"DEBUG: No user ID, redirecting to /login")
+                page.go("/login")
                 return
             
             try:
@@ -77,7 +76,7 @@ def main(page: ft.Page):
                         db, 
                         state.user_id, 
                         state.user_name,
-                        on_navigate_requests=lambda: page.push_route("/requests"),
+                        on_navigate_requests=lambda: page.go("/requests"),
                         on_logout=logout
                     )
                 )
@@ -88,7 +87,7 @@ def main(page: ft.Page):
         elif current_route == "/requests":
             print("DEBUG: Rendering Requests View")
             if not state.user_id:
-                page.push_route("/login")
+                page.go("/login")
                 return
 
             try:
@@ -100,7 +99,7 @@ def main(page: ft.Page):
                                 page, 
                                 db, 
                                 state.user_id, 
-                                on_back=lambda _: page.push_route("/home")
+                                on_back=lambda _: page.go("/home")
                             )
                         ]
                     )
@@ -112,7 +111,7 @@ def main(page: ft.Page):
         elif current_route == "/admin":
             print("DEBUG: Rendering Admin View")
             if not state.user_id or state.user_role != "管理":
-                page.push_route("/login")
+                page.go("/login")
                 return
 
             try:
@@ -138,7 +137,7 @@ def main(page: ft.Page):
         print("DEBUG: View pop")
         page.views.pop()
         top_view = page.views[-1]
-        page.push_route(top_view.route)
+        page.go(top_view.route)
 
     def on_login(user_id, role):
         print(f"DEBUG: Login user={user_id}, role={role}")
@@ -147,16 +146,16 @@ def main(page: ft.Page):
         state.user_name = "山田 太郎" if role == "現場" else "鈴木 一郎"
         
         if role == "現場":
-            page.push_route("/home")
+            page.go("/home")
         elif role == "管理":
-            page.push_route("/admin")
+            page.go("/admin")
 
     def logout():
         print("DEBUG: Logout")
         state.user_id = None
         state.user_role = None
         state.user_name = None
-        page.push_route("/login")
+        page.go("/login")
 
     page.on_route_change = route_change
     page.on_view_pop = view_pop
@@ -165,7 +164,7 @@ def main(page: ft.Page):
     # If it is /, the handler will redirect to /login
     print(f"DEBUG: Startup route check: {page.route}")
     if page.route == "/" or page.route == "":
-        page.push_route("/login")
+        page.go("/login")
     else:
         # If started with a deep link (unlikely here but good practice), force check
         route_change(page)
