@@ -147,9 +147,8 @@ def main(page: ft.Page):
     page.on_route_change = route_change
     page.on_view_pop = view_pop
     
-    # Initialize the view by manually triggering route change using 'page'
-    print("DEBUG: Triggering initial route change")
-    route_change(page)
+    # Initialize the view
+    page.go("/")
 
 if __name__ == "__main__":
     ft.app(target=main)
