@@ -48,8 +48,16 @@ def main(page: ft.Page):
         if current_route == "/login":
             print("DEBUG: Rendering Login View")
             try:
+                # DEBUG: Simplifying view to check if anything renders
                 page.views.append(
-                    LoginView(page, on_login)
+                    ft.View(
+                        "/login",
+                        [
+                            ft.AppBar(title=ft.Text("Login Debug")),
+                            ft.Text("Login View Debug - Can you see this?", size=30, color="red"),
+                            LoginView(page, on_login).controls[0] # Try to append the original content too
+                        ]
+                    )
                 )
             except Exception as e:
                 print(f"ERROR: Failed to render LoginView: {e}")
@@ -163,4 +171,4 @@ def main(page: ft.Page):
         route_change(page)
 
 if __name__ == "__main__":
-    ft.run(target=main)
+    ft.app(target=main)
