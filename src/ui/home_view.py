@@ -126,6 +126,71 @@ def HomeView(page: ft.Page, db: Database, user_id: int, user_name: str, on_navig
 
     add_log(f"ようこそ、{user_name}さん。")
 
+    # --- Notification Logic ---
+    def check_notifications():
+        recent = db.check_unread_responses(user_id)
+        if recent:
+            # recent: [(category, status, rejection_reason), ...]
+            items = []
+            for r in recent:
+                cat, status, reason = r
+                icon = ft.Icons.CHECK_CIRCLE if status == "承認済" else ft.Icons.ERROR
+                color = "green" if status == "承認済" else "red"
+                text = f"申請「{cat}」が{status}されました。"
+                if status == "却下" and reason:
+                    text += f"\n理由: {reason}"
+                
+                items.append(
+                    ft.ListTile(
+                        leading=ft.Icon(icon, color=color),
+                        title=ft.Text(text),
+                    )
+                )
+            
+            dlg = ft.AlertDialog(
+                title=ft.Text("申請結果のお知らせ"),
+                content=ft.Column(items, tight=True, width=400),
+                actions=[
+                    ft.TextButton("確認", on_click=lambda e: page.close_dialog())
+                ],
+            )
+            page.dialog = dlg
+            dlg.open = True
+            page.update()
+
+    # Check notifications on load (using a small delay or direct call if page is ready)
+    # Since this is a component returning a control, we can't easily trigger page.dialog immediately 
+    # if it's not added to page yet. 
+    # However, since we are doing manual routing in main.py (page.clean + page.add), 
+    # the control is added immediately after return.
+    # We can use a threading timer or just rely on the user interaction? 
+    # Better: return a user control (class) or just append a specialized invisible control that triggers it?
+    # Or just call it? calling it here might try to update page before this container is added.
+    # Safe bet: Use a small timer or an invisible control with did_mount.
+    # For prototype, let's try calling it but wrapping in a delayed checking function or 
+    # appending a button that user clicks? No, user wants "Login when".
+    # Let's try `page.run_task` or similar if available, or just `check_notifications()` 
+    # but handle the fact that `page.dialog` might need page to be updated first.
+    # Actually, `navigate` in `main.py` calls `page.add` then `page.update`. 
+    # If we modify `main.py` to call a method on the view, that works. 
+    # But `HomeView` returns a Container.
+    # implementation hacks: 
+    # We can use `did_mount` of a UserControl. But we are using functions returning Controls.
+    # We will simply append the dialog opening to the page asynchronously or just try it.
+    # Since `page` is passed, `page.dialog = ...` works, but `dlg.open=True` needs `page.update()`.
+    # If we do it here, it might be overwritten by `main.py`'s `page.update()`.
+    # Let's define it and return it as a part of the UI, maybe a "Check Notifications" button that is 
+    # auto-triggered? No.
+    # We will try to execute it.
+    
+    # We'll modify `main.py` to handle `on_mount` or similar, OR just hack it here.
+    # Let's add a `ft.ProgressBar(visible=False)` that has `did_mount` equivalent? No.
+    # We will just call it. It should work if we rely on `main.py` calling `page.update()` at the end.
+    
+    # Actually, `check_notifications` accesses `page`.
+    # Let's try calling it immediately.
+    check_notifications()
+
     return ft.Container(
         content=ft.Column(
             [

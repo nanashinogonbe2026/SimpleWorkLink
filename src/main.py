@@ -2,7 +2,7 @@ import flet as ft
 from database import Database
 from ui.login_view import LoginView
 from ui.home_view import HomeView
-from ui.requests_form import RequestsForm
+from ui.requests_form import RequestsFormView
 from ui.admin_dashboard import AdminDashboard
 
 # Initialize Database
@@ -46,7 +46,7 @@ def main(page: ft.Page):
             # Login View
             if route == "/login":
                 # LoginView now returns a Container directly
-                login_container = LoginView(page, on_login)
+                login_container = LoginView(page, db, on_login)
                 page.add(login_container)
             
             # Home View
@@ -72,8 +72,8 @@ def main(page: ft.Page):
                     navigate("/login")
                     return
                 
-                # RequestsForm returns a Control, so we wrap it or add directly
-                req_form = RequestsForm(
+                # RequestsFormView returns a Control, so we wrap it or add directly
+                req_form = RequestsFormView(
                     page, 
                     db, 
                     state.user_id, 
