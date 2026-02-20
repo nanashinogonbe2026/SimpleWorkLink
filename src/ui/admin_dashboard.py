@@ -261,6 +261,7 @@ def AdminDashboard(page: ft.Page, db: Database, on_back):
         reject_dialog_container = ft.Container(visible=False, expand=True)
 
         def set_reject_template(val):
+            # 却下理由テンプレートの選択に応じて手書き入力欄の表示を切替
             print(f"DEBUG: set_reject_template called. Value: {val}")
             if val == "その他":
                 reject_reason_field.visible = True
@@ -268,13 +269,13 @@ def AdminDashboard(page: ft.Page, db: Database, on_back):
                 reject_reason_field.visible = False
                 reject_reason_field.value = ""
             
-            print("DEBUG: Updating reject dialog UI")
-            reject_reason_field.update()
-            reject_dialog_container.update()
+            print(f"DEBUG: reject_reason_field.visible = {reject_reason_field.visible}")
+            # ネストされたStack/Container内でも確実にUIを更新
             page.update()
 
         # Bind event handler
-        reject_template_dropdown.on_change = lambda e: set_reject_template(e.control.value)
+        # Flet 0.80: on_change → on_select に変更
+        reject_template_dropdown.on_select = lambda e: set_reject_template(e.data)
 
         def close_reject_dialog():
             print("DEBUG: close_reject_dialog called")
@@ -343,13 +344,14 @@ def AdminDashboard(page: ft.Page, db: Database, on_back):
         ], expand=True)
 
         def open_reject_dialog(req_id):
+            # 却下ダイアログを開く（状態をリセットしてから表示）
             current_req_id[0] = req_id
             reject_reason_field.value = ""
             reject_reason_field.visible = False
-            reject_template_dropdown.value = ""
+            reject_template_dropdown.value = None
             
             reject_dialog_container.visible = True
-            reject_dialog_container.update()
+            page.update()
 
         # Requests Table Logic
         requests_table = ft.DataTable(

@@ -54,6 +54,16 @@ class RequestsFormController:
             visible=False
         )
         
+        # 勤怠以外選択時に表示する専用入力ボックス
+        self.content_detail = ft.TextField(
+            label="備考・詳細（任意）",
+            multiline=True,
+            min_lines=2,
+            visible=False,
+            hint_text="金額の内訳や詳細な説明を入力できます"
+        )
+        self.detail_container = ft.Container(content=self.content_detail, visible=False)
+        
         self.amount_field = ft.TextField(
             label="金額/個数", 
             value="0", 
@@ -84,15 +94,15 @@ class RequestsFormController:
             style=ft.ButtonStyle(color=ft.Colors.GREY)
         )
 
-        # --- Bind Events (after components are defined) ---
-        self.main_category.on_change = self.on_main_category_change
-        self.reason_template.on_change = self.on_reason_template_change
+        # --- Flet 0.80対応: on_change → on_select ---
+        self.main_category.on_select = self.on_main_category_change
+        self.reason_template.on_select = self.on_reason_template_change
 
         # Initialize Logic
         self.initialize_state()
 
     def initialize_state(self):
-        # Initial populate based on default main_category value
+        # 初期表示ではデフォルトのカテゴリに応じたオプションを設定
         init_cat = self.main_category.value
         init_data = self.CATEGORY_DATA.get(init_cat, {})
         
@@ -104,64 +114,75 @@ class RequestsFormController:
         
         self.content_manual.visible = (self.reason_template.value == "その他")
         
-        # Set visibility for amount/file based on initial category
+        # 勤怠以外の場合に専用入力ボックスを表示
+        is_not_attendance = (init_cat != "勤怠")
+        self.detail_container.visible = is_not_attendance
+        self.content_detail.visible = is_not_attendance
+        
+        # 金銭の場合に金額フィールドを表示
         is_money = (init_cat == "金銭")
         self.amount_container.visible = is_money
         self.file_upload_container.visible = is_money
 
-        # Open Default Tab
+        # デフォルトタブを設定
         self.show_tab("new", update_ui=False)
 
     def on_main_category_change(self, e):
-        print(f"DEBUG: on_main_category_change. Value: {self.main_category.value}")
+        # カテゴリ変更時に詳細種別や理由選択肢を更新（Flet 0.80: e.dataで値取得）
+        val = e.data if hasattr(e, 'data') else e.control.value
+        print(f"DEBUG: on_main_category_change. Value: {val}")
+        self.main_category.value = val
         self.update_options_logic()
         self.page.update()
 
     def on_reason_template_change(self, e):
-        print(f"DEBUG: on_reason_template_change. Value: {self.reason_template.value}")
+        # 理由テンプレート変更時に手入力欄の表示を切替（Flet 0.80: e.dataで値取得）
+        val = e.data if hasattr(e, 'data') else e.control.value
+        print(f"DEBUG: on_reason_template_change. Value: {val}")
+        self.reason_template.value = val
         self.check_manual_reason_visibility()
         self.page.update()
 
     def update_options_logic(self):
+        # カテゴリに応じて詳細種別・理由・表示フィールドを切替
         cat = self.main_category.value
         data = self.CATEGORY_DATA.get(cat, {})
         
-        # Update Sub Categories
+        # 詳細種別を更新
         subs = data.get("subs", [])
         self.sub_category.options = [ft.dropdown.Option(s) for s in subs]
-        if not self.sub_category.value or self.sub_category.value not in subs:
-            self.sub_category.value = subs[0] if subs else None
+        self.sub_category.value = subs[0] if subs else None
             
-        # Update Reasons
+        # 理由テンプレートを更新
         reasons = data.get("reasons", ["その他"])
         self.reason_template.options = [ft.dropdown.Option(r) for r in reasons]
-        if not self.reason_template.value or self.reason_template.value not in reasons:
-            self.reason_template.value = reasons[0] if reasons else None
+        self.reason_template.value = reasons[0] if reasons else None
             
-        # Update Visibility
+        # 金銭フィールドの表示切替
         is_money = (cat == "金銭")
         self.amount_container.visible = is_money
         self.file_upload_container.visible = is_money
         
-        self.check_manual_reason_visibility(update_ui=False) # Don't update page here, parent will
-
-        # Explicit Updates for affected controls
-        self.sub_category.update()
-        self.reason_template.update()
-        self.amount_container.update()
-        self.file_upload_container.update()
-        self.content_manual.update()
+        # 勤怠以外の専用入力ボックスの表示切替
+        is_not_attendance = (cat != "勤怠")
+        self.detail_container.visible = is_not_attendance
+        self.content_detail.visible = is_not_attendance
+        
+        # 手入力理由欄の表示切替
+        self.check_manual_reason_visibility(update_ui=False)
 
     def check_manual_reason_visibility(self, update_ui=True):
+        # 「その他」選択時に手入力欄を表示
         if self.reason_template.value == "その他":
             self.content_manual.visible = True
         else:
             self.content_manual.visible = False
         
         if update_ui:
-            self.content_manual.update()
+            self.page.update()
 
     def submit_request(self, e):
+        # 申請データを収集してデータベースに保存
         main = self.main_category.value
         sub = self.sub_category.value
         cat_str = f"{main} - {sub}"
@@ -178,6 +199,10 @@ class RequestsFormController:
         else:
             content_str = reason
 
+        # 勤怠以外の場合、備考・詳細があれば追加
+        if self.detail_container.visible and self.content_detail.value:
+            content_str = f"{content_str}｜備考: {self.content_detail.value}"
+
         amount = 0.0
         if self.amount_container.visible:
             try:
@@ -192,6 +217,8 @@ class RequestsFormController:
         if success:
             self.page.snack_bar = ft.SnackBar(ft.Text("申請が完了しました"), bgcolor="green")
             self.page.snack_bar.open = True
+            # フォームをリセット
+            self.content_detail.value = ""
             self.show_tab("history")
             self.page.update()
         else:
@@ -214,6 +241,7 @@ class RequestsFormController:
             self.btn_history.update()
 
     def get_application_form_content(self):
+        # 新規申請フォームのUIレイアウト
         return ft.Column(
             [
                 ft.Text("新規申請", size=18, weight="bold"),
@@ -224,6 +252,8 @@ class RequestsFormController:
                 self.reason_template,
                 self.content_manual,
                 ft.Container(height=10),
+                self.detail_container,
+                ft.Container(height=5),
                 self.amount_container,
                 ft.Container(height=10),
                 self.file_upload_container,
