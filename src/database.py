@@ -97,11 +97,42 @@ class Database:
             )
         ''')
 
-        # ... (User migration logic remains same) ...
+        # 既存ユーザーのマイグレーション（login_idがNULLのユーザーを更新）
+        cursor.execute("SELECT id, name, role FROM users WHERE login_id IS NULL AND is_active = 1")
+        legacy_users = cursor.fetchall()
+        for uid, name, role in legacy_users:
+            # デフォルトのlogin_idとパスワードを生成
+            if role == "管理":
+                new_login = "admin"
+                new_pass = self._hash_password("admin")
+            else:
+                new_login = f"user{uid}"
+                new_pass = self._hash_password("1234")
+            
+            try:
+                cursor.execute("UPDATE users SET login_id = ?, password = ? WHERE id = ?", (new_login, new_pass, uid))
+                print(f"ユーザー移行完了 {name}: ID={new_login}")
+            except sqlite3.IntegrityError:
+                new_login = f"user{uid}_{datetime.datetime.now().strftime('%M%S')}"
+                cursor.execute("UPDATE users SET login_id = ?, password = ? WHERE id = ?", (new_login, new_pass, uid))
 
-    # ... (User Management Methods remain same) ...
+        # テーブルが空の場合、初期ユーザーを作成
+        cursor.execute('SELECT count(*) FROM users')
+        if cursor.fetchone()[0] == 0:
+            # 管理者ユーザー
+            cursor.execute(
+                "INSERT INTO users (name, role, login_id, password) VALUES (?, ?, ?, ?)", 
+                ("鈴木 一郎", "管理", "admin", self._hash_password("admin"))
+            )
+            # 現場スタッフ
+            cursor.execute(
+                "INSERT INTO users (name, role, login_id, password) VALUES (?, ?, ?, ?)", 
+                ("山田 太郎", "現場", "yamada", self._hash_password("1234"))
+            )
+            print("初期ユーザーを追加しました (admin/admin, yamada/1234)")
 
-    # ... (Record Methods remain same) ...
+        conn.commit()
+        conn.close()
 
     def add_request(self, user_id, category, content, amount=0.0):
         conn = self.get_connection()
@@ -172,47 +203,6 @@ class Database:
         recent = cursor.fetchall()
         conn.close()
         return recent
-
-
-        # Connect and check for default users
-        # If login_id is NULL for existing users (due to migration), update them
-        cursor.execute("SELECT id, name, role FROM users WHERE login_id IS NULL AND is_active = 1")
-        legacy_users = cursor.fetchall()
-        for uid, name, role in legacy_users:
-            # Generate default login_id and password
-            # Simple rule: admin->admin, others->user{id}
-            if role == "管理":
-                new_login = "admin"
-                new_pass = self._hash_password("admin")
-            else:
-                new_login = f"user{uid}"
-                new_pass = self._hash_password("1234")
-            
-            try:
-                cursor.execute("UPDATE users SET login_id = ?, password = ? WHERE id = ?", (new_login, new_pass, uid))
-                print(f"Migrated user {name}: ID={new_login}, Pass=****")
-            except sqlite3.IntegrityError:
-                # Fallback if ID exists
-                new_login = f"user{uid}_{datetime.datetime.now().strftime('%M%S')}"
-                cursor.execute("UPDATE users SET login_id = ?, password = ? WHERE id = ?", (new_login, new_pass, uid))
-
-        # Create default users if table was empty
-        cursor.execute('SELECT count(*) FROM users')
-        if cursor.fetchone()[0] == 0:
-            # Admin
-            cursor.execute(
-                "INSERT INTO users (name, role, login_id, password) VALUES (?, ?, ?, ?)", 
-                ("鈴木 一郎", "管理", "admin", self._hash_password("admin"))
-            )
-            # Staff
-            cursor.execute(
-                "INSERT INTO users (name, role, login_id, password) VALUES (?, ?, ?, ?)", 
-                ("山田 太郎", "現場", "yamada", self._hash_password("1234"))
-            )
-            print("初期ユーザーを追加しました (admin/admin, yamada/1234)")
-
-        conn.commit()
-        conn.close()
 
     # --- User Management Methods ---
 

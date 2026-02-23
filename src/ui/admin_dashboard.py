@@ -27,12 +27,13 @@ def AdminDashboard(page: ft.Page, db: Database, on_back):
         def save_changes(e):
             success = db.update_record(record_id, time_field.value, status_field.value, ADMIN_ID)
             if success:
-                page.snack_bar = ft.SnackBar(ft.Text("修正を保存しました"), bgcolor="green")
-                dlg.open = False
+                page.pop_dialog()
                 refresh_callback()
+                page.snack_bar = ft.SnackBar(ft.Text("修正を保存しました"), bgcolor="green")
+                page.snack_bar.open = True
             else:
                 page.snack_bar = ft.SnackBar(ft.Text("保存に失敗しました"), bgcolor="red")
-            page.snack_bar.open = True
+                page.snack_bar.open = True
             page.update()
 
         dlg = ft.AlertDialog(
@@ -43,14 +44,12 @@ def AdminDashboard(page: ft.Page, db: Database, on_back):
                 status_field
             ], tight=True),
             actions=[
-                ft.TextButton(content=ft.Text("キャンセル"), on_click=lambda e: page.close_dialog()),
+                ft.TextButton(content=ft.Text("キャンセル"), on_click=lambda e: page.pop_dialog()),
                 ft.TextButton(content=ft.Text("保存"), on_click=save_changes),
             ],
             actions_alignment=ft.MainAxisAlignment.END,
         )
-        page.dialog = dlg
-        dlg.open = True
-        page.update()
+        page.show_dialog(dlg)
 
     def get_attendance_content():
         data_table = ft.DataTable(
@@ -132,13 +131,12 @@ def AdminDashboard(page: ft.Page, db: Database, on_back):
 
             success, msg = db.add_user(name_field.value, role_field.value, login_id_field.value, password_field.value)
             if success:
-                page.snack_bar = ft.SnackBar(ft.Text("ユーザーを追加しました"), bgcolor="green")
-                dlg.open = False
+                page.pop_dialog()
                 refresh_callback()
+                page.snack_bar = ft.SnackBar(ft.Text("ユーザーを追加しました"), bgcolor="green")
+                page.snack_bar.open = True
             else:
                 error_text.value = msg
-            
-            page.snack_bar.open = True
             page.update()
 
         dlg = ft.AlertDialog(
@@ -151,14 +149,12 @@ def AdminDashboard(page: ft.Page, db: Database, on_back):
                 error_text
             ], tight=True, width=400),
             actions=[
-                ft.TextButton("キャンセル", on_click=lambda e: page.close_dialog()),
+                ft.TextButton("キャンセル", on_click=lambda e: page.pop_dialog()),
                 ft.TextButton("登録", on_click=save_user),
             ],
             actions_alignment=ft.MainAxisAlignment.END,
         )
-        page.dialog = dlg
-        dlg.open = True
-        page.update()
+        page.show_dialog(dlg)
 
     def get_user_management_content():
         user_table = ft.DataTable(

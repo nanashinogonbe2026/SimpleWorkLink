@@ -105,9 +105,16 @@ def main(page: ft.Page):
 
     def on_login(user_id, role):
         print(f"DEBUG: Login user={user_id}, role={role}")
+        # DBからユーザー名を取得（新規追加ユーザーにも対応）
+        conn = db.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT name FROM users WHERE id = ?", (user_id,))
+        result = cursor.fetchone()
+        conn.close()
+        
         state.user_id = user_id
         state.user_role = role
-        state.user_name = "山田 太郎" if role == "現場" else "鈴木 一郎"
+        state.user_name = result[0] if result else "不明"
         
         if role == "現場":
             navigate("/home")
